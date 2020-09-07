@@ -1,0 +1,294 @@
+{% extends 'layouts/main.html' %}
+{% block title %}network{% endblock %}
+{% block content %}
+<style>
+
+.link {
+  fill: none;
+  stroke-width: 1.5px;
+  stroke-opacity: 10;
+}
+
+.nodes circle {
+  stroke: #fff;
+  stroke-width: 1px;
+  opacity : 0.9
+}
+
+.node {
+  stroke: #000;
+  stroke-width: 1px;
+}
+
+text {
+  font-family: sans-serif;
+  font-size: 10px;
+  font-weight:550;
+  white-space:nowrap;
+
+}
+
+<!-- for the wordcloud -->
+
+svg text{
+  font-family: Helvetica, sans-serif;
+  font-size: 14px;
+}
+
+.label-background-strong {
+  fill: white;
+  fill-opacity: .8;
+}
+
+#wolfstar-container {
+  cursor: default;
+}
+
+</style>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+<!-- d3-cloud library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.3/lib/alea.min.js"></script>
+<script src="https://rawgit.com/jasondavies/d3-cloud/master/build/d3.layout.cloud.js"></script>
+<script src="/static/js/wordcloud.js?ver=5" ></script>
+
+<body>
+<div class="page-header">
+  <h1>Network for the News comment</h1>
+</div>
+
+  <div id='cloud-container'></div>
+
+  <script>
+  WordCloud({
+    container: '#cloud-container',
+   {% if word_table %}
+    data: {{ word_table | safe}}
+   {% else %}
+     data:{"TF-IDF":{"심판":46.1713953676,"역사":44.4801395695,"나경원":28.9620729928,"국민":19.179685161,"나베":19.0329024594,"조국":18.9582603191,"수사":17.4323840035,"조사":16.9161373568,"구속":15.7236272529,"검찰":15.7084010269,"소리":11.0399480981,"한당":9.3730442357,"대표":7.8339981,"정치":7.1782452631,"국회":6.9881397617,"여권":6.9333334917,"패스트":6.8558099743,"자한":6.4458746213,"일본":6.3449887141,"비리":6.2237702509,"의원":6.1221410926,"트랙":5.9873222338,"야당":5.853190026,"자유":5.648867438,"여자":5.6384210094,"내년":5.6343938758,"응원":5.522962473,"처벌":5.3396501577,"자식":5.1916319027,"판사":5.189596363,"정권":5.1268830337,"정신":5.1027254565,"법대":5.0612283276,"총선":5.0585415666,"대한민국":5.0118696751,"한국":4.8808952807,"아들":4.8292535923,"나라":4.7329086436,"여당":4.6974239251,"무식":4.6170926486,"남불":4.5698979598,"경원":4.4300350278,"왜구":4.3967672688,"아베":4.3290103641,"수처":4.1508674457,"자유민주주의":4.1025393223,"출신":4.0807248669,"불법":3.9231017894,"재앙":3.8254486749,"개소리":3.8192082519,"걱정":3.8066052863,"기억":3.7314396998,"감옥":3.5714008775,"박근혜":3.4258349549,"자녀":3.3990324885,"인정":3.2814681035,"반대":3.2661614155,"쓰레기":3.1939615851,"화법":3.1438730377,"민주주의":3.141944082,"가족":3.1149734073,"인간":3.0896245838,"원칙":3.0804094674,"사형":3.0763338193,"선진":3.0681755162,"출석":3.0563979957,"독재":3.0278861552,"대통령":3.0200608055,"무능":2.9932758573,"정의":2.9783577512,"민주당":2.9061224658,"아가리":2.8811318468,"야권":2.835491029,"무도":2.8341291154,"타령":2.8192156875,"하늘":2.7267176021,"국당":2.69256144,"토착":2.686797008,"자신":2.6485191374,"주둥":2.6396656091,"보수":2.5986336944,"시간":2.5965532548,"사학":2.5387840055,"일가":2.4955241179,"감방":2.4907506433,"기록":2.4722446583,"좌파":2.448336356,"민주":2.4272075131,"당장":2.3742998148,"개혁":2.3717418482,"발목":2.3703921027,"얼굴":2.3401954697,"헛소리":2.3212050924,"극치":2.3154202771,"필요":2.2877907596,"날치기":2.2854638807,"이분":2.2801246071,"압수수색":2.2782213156,"민국":2.2736908161,"권력":2.2706082369}}
+   {% endif %}
+
+  });
+  </script>
+<p> You can resize using the mouse wheel. </p>
+
+<div>
+<svg width="1280" height="900" id="svg_net"></svg>
+</div>
+</body>
+
+
+<script>
+
+var svg = d3.select("#svg_net"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height");
+
+
+var color = d3.scaleOrdinal(['#ff7473', '#26c2e0', '#7fb854', '#d990d4', '#ff895b','#80d4f6', '#bee9b4', '#ffafd8', '#fcffb0', '#caa6fe', '#c4f4fe', '#afffba', '#83a7a3', '#acb890', '#dfd4e4']);
+//var color = d3.scaleOrdinal(d3.schemeCategory10);
+//var color = d3.scaleOrdinal(d3.schemeCategory20c.slice(1,4).reverse());
+//var color = d3.scaleThreshold().domain([1, 10])
+                //.range(d3.schemeCategory20c.slice(5,8).reverse());
+                //.range(["#999", "#D27061", "#FA4227"]);// 회색 적갈색 빨강
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function(d) { return d.id; })
+	  .distance(100)
+      //.distance(function(d) { return radius(d.source.weight / 2) + radius(d.target.weight / 2); })
+      .strength(function(d) {return 0.015; }))
+    .force("charge", d3.forceManyBody().strength(-20))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+	.force("collide",d3.forceCollide().radius(d => d.r * 5));
+
+var graph = {{ graph | safe }}
+
+  var nodes = graph.nodes;
+  // links between nodes
+  var links = graph.links;
+
+  /*var link = svg.append("g")
+      .attr("class", "links")
+    .selectAll("line")
+    .data(graph.links)
+    .enter().append("line")
+      .attr("stroke-width", function(d) { return Math.sqrt((d.nor_weight*3)**2.5); })
+      .style("stroke", function(d){
+        return d.nor_weight*500; });*/
+
+  //add encompassing group for the zoom
+  var g = svg.append("g")
+  	.attr("class", "everything");
+
+
+  var link = g.append("g").attr("class", "links")
+	.selectAll("link")
+    .data(links)
+	.enter().append("path")
+    .attr("class", "link")
+    .style("stroke-width", function(d) { return 0.5+Math.sqrt((d.nor_weight*2)**4); })
+	.attr('stroke', function(d){
+        return color(d.group);
+    });
+
+
+  var node = g.append("g").attr("class", "nodes")
+    .selectAll("g")
+    .data(nodes)
+    .enter().append("g")
+
+
+  node.append("circle")
+      .attr("class", "node")
+      .attr("r", function(d) { return ((5 + d.weight*15)); })
+      .attr("fill", function(d) { return color(d.group); })
+	  .on("mouseover", mouseOver(.2))
+	  .on("mouseout", mouseOut)
+      .on("dblclick", dblclick)
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended))
+  ;
+
+
+
+  var lables = node.append("text")
+      .text(function(d) {
+        return d.id;
+      })
+	  .attr("text-anchor", "middle")
+	  .attr("dy", ".35em")
+      //.attr('x', -10)
+      //.attr('y', 5)
+	  .style("font-size", function(d) { return (3+d.weight*18) })
+	  .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+  node.append("title")
+      .text(function(d) { return d.id; });
+
+  simulation
+      .nodes(nodes)
+      .on("tick", ticked);
+
+  simulation.force("link")
+      .links(links);
+
+  function ticked() {
+
+	link.attr("d", linkArc);
+
+
+    node
+        .attr("transform", function(d) {
+          return "translate(" + d.x + "," + d.y + ")";
+        })
+
+  }
+      // build a dictionary of nodes that are linked
+    var linkedByIndex = {};
+		links.forEach(function(d) {
+			linkedByIndex[d.source.index + "," + d.target.index] = 1;
+    });
+
+    // check the dictionary to see if nodes are linked
+    function isConnected(a, b) {
+        return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index] || a.index == b.index;
+    }
+
+    // fade nodes on hover
+    function mouseOver(opacity) {
+        return function(d) {
+            // check all other nodes to see if they're connected
+            // to this one. if so, keep the opacity at 1, otherwise
+            // fade
+            node.style("stroke-opacity", function(o) {
+                thisOpacity = isConnected(d, o) ? 1 : opacity;
+                return thisOpacity;
+            });
+            node.style("fill-opacity", function(o) {
+                thisOpacity = isConnected(d, o) ? 1 : opacity;
+                return thisOpacity;
+            });
+            // also style link accordingly
+            link.style("stroke-opacity", function(o) {
+                return o.source === d || o.target === d ? 1 : opacity;
+            });
+            link.style("stroke", function(o){
+                return o.source === d || o.target === d ? o.source.colour : "#999";
+            });
+        };
+    }
+
+    function mouseOut(d) {
+        node.style("stroke-opacity", 1);
+        node.style("fill-opacity", 1);
+        link.style("stroke-opacity", 1);
+        link.style("stroke",  function(d) { return color(d.group); });
+    }
+	//add zoom capabilities
+	var zoom_handler = d3.zoom()
+		.on("zoom", zoom_actions);
+
+	//Zoom functions
+	function zoom_actions(){
+		g.attr("transform", d3.event.transform)
+	}
+
+	zoom_handler(svg);
+
+
+
+
+function linkArc(d) {
+	var offset = 30;
+
+	var midpoint_x = (d.source.x + d.target.x) / 2;
+	var midpoint_y = (d.source.y + d.target.y) / 2;
+
+	var dx = (d.target.x - d.source.x);
+	var dy = (d.target.y - d.source.y);
+
+	var normalise = Math.sqrt((dx * dx) + (dy * dy));
+
+	var offSetX = midpoint_x + offset*(dy/normalise);
+	var offSetY = midpoint_y - offset*(dx/normalise);
+
+	return "M" + d.source.x + "," + d.source.y +
+		"S" + offSetX + "," + offSetY +
+		" " + d.target.x + "," + d.target.y;
+}
+
+
+
+function dblclick(d) {
+  d3.select(this).classed("fixed", d.fixed = false);
+}
+
+function dragstarted(d) {
+  // d3.select(this).classed("fixed", d.fixed = true);
+  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+}
+
+function dragended(d) {
+  if (!d3.event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+
+function dragstart(d) {
+  d3.select(this).classed("fixed", d.fixed = true);
+}
+
+</script>
+{% endblock %}

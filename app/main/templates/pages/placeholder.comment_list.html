@@ -1,0 +1,65 @@
+{% extends 'layouts/main.html' %}
+{% block title %}network{% endblock %}
+{% block content %}
+<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.1/bootstrap-table.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.1/extensions/filter-control/bootstrap-table-filter-control.js"></script>
+
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js"></script>
+
+
+<!--충돌되는 모듈 bootstrap-table-export.js 와 main bootstrap 3.1.1-->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.1/extensions/export/bootstrap-table-export.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.1/extensions/toolbar/bootstrap-table-toolbar.js"></script>
+
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css" />
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.10.1/bootstrap-table.min.css" />
+
+<script type="text/javascript" src="/static/js/table/pdfmake.min.js"></script>
+<script type="text/javascript" src="/static/js/table/vfs_fonts.js"></script>
+<script type="text/javascript" src="/static/js/table/tableExport.js"></script>
+
+
+<script type="text/javaScript">
+
+/*$(document).ready(function()
+{
+  $('#table_sortSearchResult').bootstrapTable('refreshOptions', {
+      exportOptions: {fileName: "tableExport",
+                      pdfmake: {enabled:true}
+                     }
+
+  });
+});*/
+
+$(function () {
+  var $table = $('#table');
+  $('#toolbar').find('select').change(function () {
+    $table.bootstrapTable('refreshOptions', {
+      exportDataType: $(this).val()
+    });
+  });
+});
+</script>
+
+<form action ="/network", method = "POST">
+<div class="page-header">
+  <h1>News Table   <button class="btn"><i class="fa fa-line-chart" aria-hidden="true">></i> 분석</button>
+</h1>
+<!--    <input type="text" class="form-control" placeholder="Search" name="table"> -->
+<input type="hidden" name="table" value= "{{ tables }}" />
+</div>
+
+<div name="table">
+{% if tables %}
+  {% for table in tables %}
+    {{ table|safe }}
+  {% endfor %}
+{% endif %}
+</div>
+</form>
+
+{% endblock %}

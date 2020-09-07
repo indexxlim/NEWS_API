@@ -1,0 +1,45 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>각종 모듈을 통한 시각화 서비스 개발중</h1>
+</div>
+<p class="lead">예정 <code>워드클라우드,SNA-완료 감성분석-추후 </code></p>
+<form class="navbar-form navbar-left" role="search" action ="/comment_list", method = "POST">
+  <p> 뉴스 url을 입력해주세요 (네이버 다음뉴스 이외 에러)</p>
+  {% if message %}
+  <p>올바른 URL이 아닙니다.</p>
+
+  {% endif %}
+
+  <div class="form-group">
+    <input type="text" class="form-control" placeholder="Search" name="url">
+  </div>
+  <button type="submit" class="btn btn-default">Submit</button>
+</form>
+<br><br><br><br>
+<div class="page-header"> <h2>뉴스 검색</h2> </div>
+(시간이 오래걸리는 성능 문제로 테스트중 )
+<form role="search"  action = "/comment_list", method = "POST">
+  <div class="container">
+    <label class="checkbox-inline" for="daum"> <input type="checkbox" id="daum"> 다음 </label>
+    <label class="checkbox-inline" for="naver"> <input type="checkbox" id="naver"> 네이버 </label>
+  </div>
+
+  <div class="form-group input-group">
+    <span class="input-group-addon">Keyword</span>
+    <input type="text" id="Keyword" class="form-control">
+    <span class="input-group-addon">Start Date</span>
+    <input type="text" id="s_date" class="form-control">
+    <span class="input-group-addon">End Date</span>
+    <input type="text" id="e_date" class="form-control">
+    <span class="input-group-btn">
+      <button class="btn btn-default" type="submit">search!</button>
+    </span>
+  </div>
+</form>
+
+
+
+{% endblock %}

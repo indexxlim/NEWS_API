@@ -1,0 +1,155 @@
+{% extends 'layouts/main.html' %}
+{% block title %}network{% endblock %}
+{% block content %}
+<style>
+
+.links line {
+  stroke: #999;
+  stroke-opacity: 15;
+}
+
+.nodes circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+text {
+  font-family: sans-serif;
+  font-size: 15px;
+  font-weight:550;
+}
+</style>
+
+<div class="page-header">
+  <h1>Network for the News comment</h1>
+</div>
+
+<svg width="800" height="600"></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height")
+    svg.call(zoomer);
+;
+
+//var color = d3.scaleOrdinal(d3.schemeCategory20c.slice(1,4).reverse());
+var color = d3.scaleThreshold().domain([1, 10])
+                .range(d3.schemeCategory20c.slice(1,4).reverse());
+                //.range(["#999", "#D27061", "#FA4227"]);// 회색 적갈색 빨강
+			
+// scale이 적용되는 공간 정의
+var xScale = d3.scale.linear()
+		.domain([0, width])
+		.range([0, width]);
+var yScale = d3.scale.linear()
+		.domain([0, height])
+		.range([0, height]);
+
+//zoom 기능 정의. scaleExtent 부분을 수정하여 zoom의 한계를 조정할 수 있다.
+var zoomer = d3.behavior.zoom().x(xScale).y(yScale).scaleExtent([0.1, 8])
+				  .on("zoom", zoom);
+
+//위에서 호출한 zoom 함수를 정의.
+//혹시 모를 나중을 위해 곧바로 tick()을 호출하지 않고, zoom 함수를 한번 더 거쳤다.
+function zoom() {        
+	ticked(); 
+};
+
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function(d) { return d.id; })
+      //.distance(function(d) { return radius(d.source.weight / 2) + radius(d.target.weight / 2); })
+      .strength(function(d) {return 0.0035; }))
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2));
+
+d3.json("https://raw.githubusercontent.com/indexxlim/Jsondata/master/data_str.json", function(error, graph) {
+  if (error) throw error;
+
+  var link = svg.append("g")
+      .attr("class", "links")
+    .selectAll("line")
+    .data(graph.links)
+    .enter().append("line")
+      .attr("stroke-width", function(d) { return Math.sqrt((d.nor_weight*3)**3); })
+      .style("stroke", function(d){
+        //console.log(d.nor_weight)
+        return d.nor_weight*500; });
+
+  var node = svg.append("g")
+      .attr("class", "nodes")
+    .selectAll("g")
+    .data(graph.nodes)
+    .enter().append("g")
+
+  var circles = node.append("circle")
+      .attr("r", 15)
+      .attr("fill", function(d) {  return color((d.weight*2)**4); })
+      .on("dblclick", dblclick)
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+  var lables = node.append("text")
+      .text(function(d) {
+        return d.id;
+      })
+      .attr('x', 12)
+      .attr('y', 6);
+
+  node.append("title")
+      .text(function(d) { return d.id; });
+
+  simulation
+      .nodes(graph.nodes)
+      .on("tick", ticked);
+
+  simulation.force("link")
+      .links(graph.links);
+
+  function ticked() {
+    link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node
+        .attr("transform", function(d) {
+          return "translate(" + d.x + "," + d.y + ")";
+        })
+  }
+});
+
+function dblclick(d) {
+  d3.select(this).classed("fixed", d.fixed = false);
+}
+
+function dragstarted(d) {
+  // d3.select(this).classed("fixed", d.fixed = true);
+  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+}
+
+function dragended(d) {
+  if (!d3.event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+
+function dragstart(d) {
+  d3.select(this).classed("fixed", d.fixed = true);
+}
+
+</script>
+
+{% endblock %}
