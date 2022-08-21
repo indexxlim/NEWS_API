@@ -1,4 +1,4 @@
-# WIGO_API
+# NEWS_API
 Restful API for learning
 
 # 개발환경
